@@ -7,134 +7,187 @@ from docx.shared import Pt
 
 now = datetime.datetime.now()
 
-def quiz_add(quiz_no, add_no= 2, dig= 2, line_l= 80, q_per_l= 2, same_dig= False):
+class MathGen(object):
     '''
-    For a given params, to generate math addition quizs
-    :param quiz_no:  number of quiz
-    :param add_no:  how many additions together
-    :param dig:  digital number
-    :param line_l: printable characters per line
-    :param q_per_l: quiz to print per line
-    :param same_dig:  True to add same digits numbers, False to add all possible positive numbers
-    :return:
-    '''
-    cnt = 0
-    with open('mathgen' + now.strftime("%Y-%m-%d") + '.txt', 'w') as file:
-        file.write('===== Math Quiz by ' + str(now.strftime("%Y-%m-%d")) + ' =====\n\n')
+       For a given params, to generate math addition quizs
+       :param type: math quiz type, selection of Adds, Subs, Muls, Divs
+       :param quiz_no:  number of total quiz to generate
+       :param cal_no:  how many calculations per quiz
+       :param dig:  digital number of each calculation number
+       :param same_dig:  True to be same digits numbers calculation, False to be one digits less on 2nd and later numbers
+       :param: no_neg: True to guarantee no negative number happens, False could see negative number result
+       :param q_per_l: quiz to print per line for print
+       :param f_size: font size in word file for print
+       :param: quizDic: a fictionary to story generated math quiz
+       :return:
+       '''
+    def __init__(self, n):
+        self.type = None
+        self.quiz_no = n
+        self.cal_no = 2
+        self.dig = 2
+        self.same_dig = False
+        self.no_neg = False
+        self.q_per_l = 2
+        self.f_size = 20
+        self.quizDic = {}
 
-        for i in range(int(quiz_no/q_per_l) +1):
-            for j in range(q_per_l):
-                quiz = []
-                quiz.append('Q' + str(i*q_per_l+j+1) + ': ')
-                for k in range(add_no):
-                    if same_dig:
-                        quiz.append(str(random.randint(10**(dig-1), 10 ** dig-1)))
-                    else:
-                        quiz.append(str(random.randint(1, 10 ** dig - 1)))
-                    quiz.append(' + ')
-                quiz[-1] = ' = '
-                s = '%-' + str(int(line_l/q_per_l)) + 's'
-                file.write(s % ''.join(quiz))
-                cnt += 1
-                if cnt == quiz_no:
-                    file.write('\n\n\n\n')
-                    return
+    def set_type(self, type):
+        self.type = type
 
+    def set_quiz_no(self, quiz_no):
+        self.quiz_no = quiz_no
 
+    def set_cal_no(self, cal_no):
+        self.cal_no = cal_no
 
-def quiz_add_docx(quiz_no, add_no= 2, dig= 2, q_per_l= 2, same_dig= False, f_size=20):
-    '''
-    For a given params, to generate math addition quizs
-    :param quiz_no:  number of quiz
-    :param add_no:  how many additions together
-    :param dig:  digital number
-    :param q_per_l: quiz to print per line
-    :param same_dig:  True to add same digits numbers, False to add all possible positive numbers
-    :param f_size: font size in word file
-    :return:
-    '''
-    cnt = 0
-    fname = 'MathQuizGen_' + now.strftime("%m-%d_") + str(add_no) + 'x' + str(dig) + '-digitAdds'
-    document = Document()
-    document.add_heading(fname, 0)
-    style = document.styles['Normal']
-    font = style.font
-    font.size = Pt(f_size)
-    style.paragraph_format.space_after = Pt(f_size*1.25)
+    def set_dig(self, dig):
+        self.dig = dig
 
-    table = document.add_table(rows=int(quiz_no/q_per_l) +1, cols=q_per_l)
+    def set_same_dig(self, same_dig):
+        self.same_dig = same_dig
 
-    for i in range(int(quiz_no / q_per_l) + 1):
-        for j in range(q_per_l):
+    def set_no_neg(self, no_neg):
+        self.no_neg = no_neg
+
+    def set_q_per_l(self, q_per_l):
+        self.q_per_l = q_per_l
+
+    def set_f_size(self, f_size):
+        self.f_size = f_size
+
+    def setParams(self, type, quiz_no, cal_no, dig, same_dig, no_neg, q_per_l, f_size):
+        """ batch set up parameters """
+        self.type = type
+        self.quiz_no = quiz_no
+        self.cal_no = cal_no
+        self.dig = dig
+        self.same_dig = same_dig
+        self.no_neg = no_neg
+        self.q_per_l = q_per_l
+        self.f_size = f_size
+
+    def getParams(self):
+        """ batch get parameters """
+        return self.type, self.quiz_no, self.cal_no, self.dig, self.same_dig, self.no_neg, self.q_per_l, self.f_size
+
+    def mathadds(self):
+        self.type = 'Adds'
+        self.quizDic = {}
+        for i in range(self.quiz_no):
             quiz = []
-            quiz.append('Q' + str(i * q_per_l + j + 1) + ': ')
-            # row_cells = table.add_row().cells
-            for k in range(add_no):
-                if same_dig:
-                    quiz.append(str(random.randint(10 ** (dig - 1), 10 ** dig - 1)))
+            upper_bound = 10 ** self.dig - 1
+            lower_bound = 10 ** (self.dig-1)
+            first_no = random.randint(lower_bound, upper_bound)
+            for j in range(self.cal_no):
+                if j == 0:
+                    quiz.append(str(first_no))
                 else:
-                    quiz.append(str(random.randint(1, 10 ** dig - 1)))
+                    if self.same_dig:
+                        quiz.append(str(random.randint(lower_bound, upper_bound)))
+                    elif self.dig>1:
+                        quiz.append(str(random.randint(1, lower_bound-1)))
+                    else:
+                        quiz.append(str(random.randint(1, upper_bound)))
                 quiz.append(' + ')
             quiz[-1] = ' = '
-            table.rows[i].cells[j].text = ''.join(quiz)
+            self.quizDic['Q'+str(i+1)+':'] = ''.join(quiz)
 
-            cnt += 1
-            if cnt == quiz_no:
-                document.save(fname + '.docx')
-                return
-
-
-
-def quiz_sub_docx(quiz_no, sub_no= 2, dig= 2, q_per_l= 2, same_dig= False, f_size=20):
-    '''
-    For a given params, to generate math addition quizs
-    :param quiz_no:  number of quiz
-    :param sub_no:  how many subtraction together
-    :param dig:  digital number
-    :param q_per_l: quiz to print per line
-    :param same_dig:  True to sub same digits numbers, answer could be negative number. False to sub n-1 dig number, answer likely positive number.
-    :param f_size: font size in word file
-    :return:
-    '''
-    cnt = 0
-    fname = 'MathQuizGen_' + now.strftime("%m-%d_") + str(sub_no) + 'x' + str(dig) + '-digitSubs'
-    document = Document()
-    document.add_heading(fname, 0)
-    style = document.styles['Normal']
-    font = style.font
-    font.size = Pt(f_size)
-    style.paragraph_format.space_after = Pt(f_size*1.25)
-
-    table = document.add_table(rows=int(quiz_no/q_per_l) +1, cols=q_per_l)
-
-    for i in range(int(quiz_no / q_per_l) + 1):
-        for j in range(q_per_l):
+    def mathsubs(self):
+        self.type = 'Subs'
+        self.quizDic = {}
+        for i in range(self.quiz_no):
             quiz = []
-            quiz.append('Q' + str(i * q_per_l + j + 1) + ': ')
-            # row_cells = table.add_row().cells
-            for k in range(sub_no):
-                if k==0:
-                    quiz.append(str(random.randint(10 ** (dig - 1), 10 ** dig - 1)))
+            upper_bound = 10 ** self.dig - 1
+            lower_bound = 10 ** (self.dig-1)
+            first_no = random.randint(lower_bound, upper_bound)
+            for j in range(self.cal_no):
+                if j == 0:
+                    quiz.append(str(first_no))
                 else:
-                    if same_dig:
-                        quiz.append(str(random.randint(10 ** (dig - 1), 10 ** dig - 1)))
+                    if self.same_dig:
+                        if self.no_neg:
+                            quiz.append(str(random.randint(1, first_no)))
+                        else:
+                            quiz.append(str(random.randint(lower_bound, upper_bound)))
+                    elif self.dig>1:
+                        quiz.append(str(random.randint(1, lower_bound-1)))
                     else:
-                        quiz.append(str(random.randint(1, 10 ** (dig - 1))))
+                        quiz.append(str(random.randint(1, first_no)))
                 quiz.append(' - ')
             quiz[-1] = ' = '
-            table.rows[i].cells[j].text = ''.join(quiz)
+            self.quizDic['Q'+str(i + 1)+':'] = ''.join(quiz)
 
-            cnt += 1
-            if cnt == quiz_no:
-                document.save(fname + '.docx')
-                return
+    def mathmuls(self):
+        self.type = 'Muls'
+        self.quizDic = {}
+        for i in range(self.quiz_no):
+            quiz = []
+            upper_bound = 10 ** self.dig - 1
+            lower_bound = 10 ** (self.dig - 1)
+            first_no = random.randint(lower_bound, upper_bound)
+            for j in range(self.cal_no):
+                if j == 0:
+                    quiz.append(str(first_no))
+                else:
+                    if self.same_dig:
+                        quiz.append(str(random.randint(lower_bound, upper_bound)))
+                    elif self.dig > 1:
+                        quiz.append(str(random.randint(1, lower_bound - 1)))
+                    else:
+                        quiz.append(str(random.randint(1, upper_bound)))
+                quiz.append(' * ')
+            quiz[-1] = ' = '
+            self.quizDic['Q' + str(i + 1) + ':'] = ''.join(quiz)
+
+    def savedocs(self):
+        fname = 'MathQuizGen_'+now.strftime("%m-%d_")+str(self.cal_no)+'x'+str(self.dig)+'-digit'+self.type
+        document = Document()
+        document.add_heading(fname, 0)
+        style = document.styles['Normal']
+        font = style.font
+        font.size = Pt(self.f_size)
+        style.paragraph_format.space_after = Pt(self.f_size * 1.25)
+
+        table = document.add_table(rows=int(self.quiz_no / self.q_per_l) + 1, cols=self.q_per_l)
+        row, col = 0, 0
+        for key, item in self.quizDic.items():
+            table.rows[row].cells[col].text = key + item
+            col += 1
+            if col == self.q_per_l:
+                col = 0
+                row += 1
+
+        document.save(fname + '.docx')
+        return
 
 
+mg = MathGen(0)
 
-quiz_add_docx(94, add_no=2, f_size=20, same_dig=True) #to generate  quiz
-# quiz_add(quiz_no, add_no= 2, dig= 2, q_per_l= 2, same_dig= True)
+mg.set_quiz_no(70)
+# mg.set_cal_no(2)
+# mg.set_dig(2)
+mg.set_same_dig(True)
+mg.mathadds()
+print('Adds params(type/qn/cn/d/sd/nn/qpl/fs): ', mg.getParams())
+mg.savedocs()
 
-quiz_sub_docx(94, sub_no=2, dig=2, f_size=20) #to generate quiz
+mg.set_quiz_no(46)
+# mg.set_cal_no(2)
+# mg.set_dig(2)
+mg.set_same_dig(True)
+mg.set_no_neg(True)
+mg.mathsubs()
+print('Subs params(type/qn/cn/d/sd/nn/qpl/fs): ', mg.getParams())
+mg.savedocs()
+
+mg.set_quiz_no(22)
+# mg.set_cal_no(2)
+mg.set_dig(1)
+mg.set_same_dig(True)
+mg.mathmuls()
+print('Muls params(type/qn/cn/d/sd/nn/qpl/fs): ', mg.getParams())
+mg.savedocs()
 
 print("====end====")
 
